@@ -1,4 +1,4 @@
-package Ex.ex4;
+package Exs.ex4;
 //Verificação Palindromo
 public class Main {
     public static void main(String[] args) {
