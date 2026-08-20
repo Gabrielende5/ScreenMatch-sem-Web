@@ -12,7 +12,6 @@ public class ScreenmatchApplication implements CommandLineRunner {
     public static void main(String[] args) {
         SpringApplication.run(ScreenmatchApplication.class, args);
     }
-
     @Override
         //É um função da interface implementada "CommandLineRunner"
     public void run(String... args) throws Exception { //Aqui que será o "main" de quando executar o código normal, pois se está usando o Spring Framework
