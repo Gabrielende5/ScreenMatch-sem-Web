@@ -9,10 +9,7 @@ import br.com.alura.screenmatch.service.ConverteDados;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Principal {
@@ -67,12 +64,21 @@ public class Principal {
                                                 //Teria como trocar tudo isso (collect...) por ".toList()", porém a lista criada seria imutável, ou seja, não teria como adicionar algo (um novo episódio) depois na lista "dadosEpisodiosGeral"
 
                             //Top 5 episódios de todas as temporadas
-        dadosEpisodiosGeral.stream()
-                .filter(e->!(e.avaliacao().equalsIgnoreCase("N/A")))//Filtrar para que quando o episódio tiver a avaliação igual (equals) a "N/A", se irá não colocar ele (!) na lista
-                                                                                                //O "IgnoreCase" no "equals" é apenas para analisar mesmo se for "N/A" ou "n/a"
-                .sorted(Comparator.comparing(DadosEpisodio::avaliacao).reversed()) //Ordenar pela "avaliacao" em ordem reversa
-                .limit(5)//Top 5
-                .forEach(System.out::println);
+//        System.out.println();
+//        System.out.println("Top 5 episódios de todas as temporadas");
+//        dadosEpisodiosGeral.stream()
+//                .filter(e->!(e.avaliacao().equalsIgnoreCase("N/A")))//Filtrar para que quando o episódio tiver a avaliação igual (equals) a "N/A", se irá não colocar ele (!) na lista
+//                                                                                                //O "IgnoreCase" no "equals" é apenas para analisar mesmo se for "N/A" ou "n/a"
+//                .peek(e-> System.out.println("Primeiro filtro (N/A) " + e)) //Usado para "debugar", ou seja, ver se está correto
+//                                                                                            //Tipo dar vários prints para cada iteração de um for
+//                                                                                                //Ao ver o "peek", se dá para ver que o "Streams" faz da forma que ele acha mais otimizada (por exemplo, ele filtra tudo primeiro, depois ordena um específico, depois pega um específico para o limite, depois mapeia esse um específico e só depois imprime esse um em específico. Já para o próximo "e" (episódio), ele apenas ordena-limita-mapeia e depois mostra, pois filtragem já foi tudo no início
+//                .sorted(Comparator.comparing(DadosEpisodio::avaliacao).reversed()) //Ordenar pela "avaliacao" em ordem reversa
+//                .peek(e-> System.out.println("Ordenação " + e))
+//                .limit(5)//Top 5
+//                .peek(e-> System.out.println("Limite " + e))
+//                .map(e->e.titulo().toUpperCase())
+//                .peek(e-> System.out.println("Mapeamento " + e))
+//                .forEach(System.out::println);
 
         List<Episodio> episodios = listaTemporadas.stream()
                 .flatMap(t->t.episodios().stream()
@@ -81,19 +87,56 @@ public class Principal {
                 ).collect(Collectors.toList());
         episodios.forEach(System.out::println);
 
-        System.out.print("A partir de que ano você deseja ver os episódios: ");
-        int ano = leitura.nextInt();
-        leitura.nextLine();
+        System.out.print("Digite um trecho do título do episódio: ");
+        String trechoTitulo = leitura.nextLine();
 
-        LocalDate dataBusca = LocalDate.of(ano,1,1);
 
-        DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy"); //Formato brasileiro de dia/mes/ano
-        episodios.stream()
-                .filter(e ->e.getDataLancamento()!=null && e.getDataLancamento().isAfter(dataBusca))
-                .forEach(e -> System.out.println(
-                        "Temporada: " + e.getTemporada() + " Episódio: " + e.getTitulo() + " DataLançamento: " + e.getDataLancamento().format(formatador)
-                ));
+                //Fazer meio que uma busca para tentar procurar o título com base em um trecho, retornando apenas o primeiro que achar (sempre irá retornar o primeiro que achar pelo findFirst) -> para retornar todos, é só criar uma lista ao invés de apenas um valor
+                                                                                                                                                                                                        //"List<T>" quando você espera zero ou mais resultados
+                                                                                                                                                                                                        //"Optional<T>" quando você espera zero ou um resultado
+        Optional<Episodio> episodioBuscado = episodios.stream() //Optional é um objeto contêiner que pode ou não conter um valor nulo (valor nulo = não tem episódio com esse trecho, uma facilidade que o Optional proporciona)
+                                                                    //os "id_s" muitas das vezes usam o Optional, pois você pode achar o id, ou pode não achar (null)
+                .filter(e-> e.getTitulo().toUpperCase().contains(trechoTitulo.toUpperCase()))
+                .findFirst(); //Devolve resultado mais lento que o "findAny()", todavia, o "findFirst()" tem garantia que sempre irá devolver o primeiro em uma ordem específica, aumentando assima a "acurácia", já o "findAny()" ele procura e o que ele achar primeiro (qualquer um),
+                                //É uma operação final, que nem o forEach(print...)
+                                //"findAny()": utilizado para encontrar qualquer elemento que satisfaça uma determinada condição em uma coleção, onde cada thread pode buscar um elemento da coleção de forma paralela (mais rápido), atividades paralelas
 
+
+
+        if(episodioBuscado.isPresent()){ //se "episódioBuscado" tem uma referencia de "episódio" no Optional, está presente (não é nulo, não é Empty):
+            System.out.println("Episódio encontrado!");
+            System.out.println("Temporada: " + episodioBuscado.get());//o "get()" pega o episódio que está lá dentro (não tem como ser null o resultado, pois tem o isPresent() na verificação)
+        } else{
+            System.out.println("Episódio não encontrado!");
+        }
+
+//        System.out.print("A partir de que ano você deseja ver os episódios: ");
+//        int ano = leitura.nextInt();
+//        leitura.nextLine();
+//
+//        LocalDate dataBusca = LocalDate.of(ano,1,1);
+//
+//        DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy"); //Formato brasileiro de dia/mes/ano
+//        episodios.stream()
+//                .filter(e ->e.getDataLancamento()!=null && e.getDataLancamento().isAfter(dataBusca))
+//                .forEach(e -> System.out.println(
+//                        "Temporada: " + e.getTemporada() + " Episódio: " + e.getTitulo() + " DataLançamento: " + e.getDataLancamento().format(formatador)
+//                ));
+
+                    //Um dicionario, aonde a chave é a temporada e o valor é a média da avaliação da temporada
+        Map<Integer,Double> avaliacoesPorTemporada = episodios.stream()
+                .filter(e->e.getAvaliacao()>0.0)//Filtra para ter episódios apenas com avaliação > 0.0, ou seja, aqueles N/A (no constructor foi definido que N/A = 0.0)
+                .collect(Collectors.groupingBy(Episodio::getTemporada,Collectors.averagingDouble(Episodio::getAvaliacao))); //"groupingBy(chave,valor)" é o método de guardar em um dicionario usando stream()
+        System.out.println(avaliacoesPorTemporada);
+
+                    //Gera estatítiscas básicas da série (todos os episódios de todas as temporadas)
+        DoubleSummaryStatistics estatisticas = episodios.stream()
+                .filter(e-> e.getAvaliacao()>0.0)
+                .collect(Collectors.summarizingDouble(Episodio::getAvaliacao)); //"Episodio::getAvaliacao" = "e -> e.getAvaliacao()"
+        System.out.println("Média: " + estatisticas.getAverage());
+        System.out.println("Melhor episódio: " + estatisticas.getMax());
+        System.out.println("Pior episódio: " + estatisticas.getMin());
+        System.out.println("Quantidade de episódios avaliados: "+ estatisticas.getCount());
     }
 }
 
